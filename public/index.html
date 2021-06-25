@@ -1,0 +1,143 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <script src="https://code.jquery.com/jquery-3.4.0.min.js" integrity="sha256-BJeo0qm959uMBGb65z40ejJYGSgR7REI4+CW1fNKwOg=" crossorigin="anonymous"" type="text/javascript" charset="utf-8"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0/dist/Chart.min.js" type="text/javascript" charset="utf-8"></script>
+    <script src="chart-device-data.js" type="text/javascript" charset="utf-8"></script>
+    <link href="css/style.css" rel="stylesheet" />
+
+    <title>Temperature &amp; Humidity Real-time Data</title>
+</head>
+
+<body><form id="my-form">
+    <h1 class="flexHeader">
+        <span>
+            <span id="deviceCount">0 devices</span>
+            <select id="listOfDevices" class="select_box"></select>
+        </span>
+        <span>Temperature & Humidity Real-time Data</span>
+    </h1>
+    <div>
+        <canvas id="iotChart"></canvas>
+    </div>
+    <div>
+        <input type="text" id="deviceId" name="filterValue" placeholder="Device Id" />
+        <button id="creButton" type="submit">Create Device </button> <button id="delButton" type="submit">Delete Device </button>
+        <button id="qryButton" type="submit">Query Devices </button>
+        <div id="op_status"></div>
+        <div id="devicelist">
+            <pre></pre>
+        </div>
+        <table>
+            <th>Robot Device List</th>
+            <tr>
+                
+                <td>Device ID</td>
+                <td>Connection</td>
+            </tr>
+        </table>
+        <table id="t" border="1" class="docutils">            
+            <tr class="rowitem">
+                <td class="rowfrom"></td> 
+            </tr>
+           
+            <tr id="rowdata" class="first">
+                <td class="from"></td> 
+
+            </tr>
+        </table>
+    </div>
+    <script>
+        (function($){
+            function processForm( e ){
+                console.log(e.originalEvent.submitter.id)
+                var btnID = e.originalEvent.submitter.id
+                $( ".rowdata" ).empty();
+                if(btnID =='qryButton'){
+
+                    $.ajax({
+                    url: 'http://localhost:31000/getDevices',
+                    dataType: 'json',
+                    type: 'get',
+                    contentType: 'application/x-www-form-urlencoded',
+                    data: $(this).serialize(),
+                    success: function( data, textStatus, jQxhr ){
+                        $( "#t" ).empty();
+                        $row = $('.first').clone();          
+                        var rtnvalue = data.return.split(",");; 
+                        for(i=0;i<rtnvalue.length;i++){
+                            var devicevalue = rtnvalue[i].split(":");;
+                            //$row.find('.from').html(rtnvalue[i]);
+                            //Similarly repeat the above two lines for other columns
+                            //...
+                            $('#t').append("<tr><td>"+devicevalue[0]+"</td><td>"+devicevalue[1]+"</td></tr>");
+                            $('#t').css('text-align','left');
+
+                        }
+                        
+                        //$('#devicelist pre').html( data );
+                    },
+                    error: function( jqXhr, textStatus, errorThrown ){
+                        console.log( errorThrown );
+                    }
+                });
+
+
+                } else if(btnID =='creButton'){
+                    $.ajax({
+                    url: 'http://localhost:31000/createDevice',
+                    dataType: 'text',
+                    data: JSON.stringify ({deviceid: $("#deviceId").val()}),
+                    type: 'post',
+                    contentType: 'application/json',
+                    //data: $(this).serialize(),
+                    success: function( data, textStatus, jQxhr ){
+                        
+                        console.log(data)
+                        $('#op_status').html( data );
+                        
+                        //$('#devicelist pre').html( data );
+                    },
+                    error: function( jqXhr, textStatus, errorThrown ){
+                        console.log( errorThrown );
+                    }
+                });
+
+                } else {
+                    $.ajax({
+                    url: 'http://localhost:31000/deleteDevice',
+                    dataType: 'text',
+                    data: JSON.stringify ({deviceid: $("#deviceId").val()}),
+                    type: 'post',
+                    contentType: 'application/json',
+                    //data: $(this).serialize(),
+                    success: function( data, textStatus, jQxhr ){
+                        
+                        console.log(data)
+                        $('#op_status').html( data );
+                        
+                        //$('#devicelist pre').html( data );
+                    },
+                    error: function( jqXhr, textStatus, errorThrown ){
+                        console.log( errorThrown );
+                    }
+                });
+
+                }
+                
+    
+                e.preventDefault();
+            }
+    
+            $('#my-form').submit( processForm );
+        })(jQuery);
+    </script>
+    </form>
+</body>
+
+</html>
